@@ -19,8 +19,8 @@ def _create_client() -> AzureOpenAI:
 
     return AzureOpenAI(
         api_key=api_key,
-        api_version=api_version,
         azure_endpoint=endpoint,
+        api_version=api_version,
     )
 
 
@@ -29,11 +29,11 @@ _client = _create_client()
 
 def call_llm_json(model: str, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     """
-    Azure OpenAI に JSON モードで問い合わせるヘルパー関数。
-    `response_format={"type": "json_object"}` を使って JSON 返却を強制する。
+    Azure OpenAI を JSON モードで 1 回呼び出して、
+    確実に JSON オブジェクトを返させる共通関数。
     """
-    response = _client.chat.completions.create(
-        model=model,  # Azure 上のデプロイ名
+    resp = _client.chat.completions.create(
+        model=model,        # Azure 上の「デプロイ名」
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": system_prompt},
@@ -42,5 +42,5 @@ def call_llm_json(model: str, system_prompt: str, user_prompt: str) -> Dict[str,
         temperature=0.8,
     )
 
-    content = response.choices[0].message.content
+    content = resp.choices[0].message.content
     return json.loads(content)
