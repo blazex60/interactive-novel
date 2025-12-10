@@ -1,0 +1,12 @@
+[project]
+name = "worldline-novel"
+version = "0.1.0"
+description = "Interactive worldline-shift novel using OpenAI API"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.40.0",
+    "openai>=1.52.0",
+]
+
+[tool.uv]
+# uv の設定：必要なら追加
