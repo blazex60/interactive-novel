@@ -4,20 +4,24 @@ import json
 import os
 from typing import Any, Dict
 
-from openai import OpenAI
+from openai import AzureOpenAI
 
 
-def _create_client() -> OpenAI:
-    """
-    OpenAI API クライアントを作成する。
-    - OPENAI_API_KEY 環境変数が必須。
-    """
-    api_key = os.getenv("OPENAI_API_KEY")
+def _create_client() -> AzureOpenAI:
+    api_key = os.getenv("AZURE_OPENAI_API_KEY")
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY が設定されていません。")
+        raise RuntimeError("AZURE_OPENAI_API_KEY が設定されていません。")
+    if not endpoint:
+        raise RuntimeError("AZURE_OPENAI_ENDPOINT が設定されていません。")
 
-    # 通常の OpenAI エンドポイント
-    return OpenAI(api_key=api_key)
+    return AzureOpenAI(
+        api_key=api_key,
+        api_version=api_version,
+        azure_endpoint=endpoint,
+    )
 
 
 _client = _create_client()
@@ -25,10 +29,11 @@ _client = _create_client()
 
 def call_llm_json(model: str, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
     """
-    LLM に JSON オブジェクトだけを返させるユーティリティ。
+    Azure OpenAI に JSON モードで問い合わせるヘルパー関数。
+    `response_format={"type": "json_object"}` を使って JSON 返却を強制する。
     """
-    resp = _client.chat.completions.create(
-        model=model,
+    response = _client.chat.completions.create(
+        model=model,  # Azure 上のデプロイ名
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": system_prompt},
@@ -36,5 +41,6 @@ def call_llm_json(model: str, system_prompt: str, user_prompt: str) -> Dict[str,
         ],
         temperature=0.8,
     )
-    content = resp.choices[0].message.content
+
+    content = response.choices[0].message.content
     return json.loads(content)
